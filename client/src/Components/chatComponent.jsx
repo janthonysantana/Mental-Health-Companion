@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import axios from 'axios';
 import apiServerAxios from '../api/axios';
-import { InputAdornment, IconButton, Box, Card, CardContent, Typography, TextField, Button, List, ListItem, ListItemAvatar, ListItemText, CircularProgress, Snackbar, Divider, Avatar, Tooltip } from '@mui/material';
+import { InputAdornment, Switch, IconButton, Box, Card, CardContent, Typography, TextField, Button, List, ListItem, ListItemAvatar, ListItemText, CircularProgress, Snackbar, Divider, Avatar, Tooltip } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import SendIcon from '@mui/icons-material/Send';
 import MicIcon from '@mui/icons-material/Mic';
@@ -26,8 +26,8 @@ const TypingIndicator = () => (
 
 
 const ChatComponent = () => {
-    const { user, voiceEnabled , setVoiceEnabled} = useContext(UserContext);
-    
+    const { user, voiceEnabled, setVoiceEnabled } = useContext(UserContext);
+
     const userId = user?.userId;
     const [chatId, setChatId] = useState(null);
     const [turnId, setTurnId] = useState(0);
@@ -48,7 +48,7 @@ const ChatComponent = () => {
     const handleToggleVoice = (event) => {
         event.preventDefault(); // Prevents the IconButton from triggering form submissions if used in forms
         setVoiceEnabled(!voiceEnabled);
-      };
+    };
 
     const speak = (text) => {
 
@@ -203,98 +203,98 @@ const ChatComponent = () => {
     }, [input, userId, chatId, turnId]);
 
 
-    
+
 
     // Function to handle recording start
     // Function to check supported MIME types for recording
-const getSupportedMimeType = () => {
-    if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
-        return 'audio/webm; codecs=opus';
-    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        // Fallback for Safari on iOS
-        return 'audio/mp4';
-    } else {
-        // Default to WAV if no other formats are supported
-        return 'audio/wav';
-    }
-};
-
-// Function to start recording
-const startRecording = () => {
-    navigator.mediaDevices.getUserMedia({
-        audio: {
-            sampleRate: 44100,
-            channelCount: 1,
-            volume: 1.0,
-            echoCancellation: true
+    const getSupportedMimeType = () => {
+        if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
+            return 'audio/webm; codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            // Fallback for Safari on iOS
+            return 'audio/mp4';
+        } else {
+            // Default to WAV if no other formats are supported
+            return 'audio/wav';
         }
-    })
-    .then(stream => {
-        audioChunksRef.current = [];
-        const mimeType = getSupportedMimeType();
-        let recorder = new MediaRecorder(stream, { mimeType });
+    };
 
-        recorder.ondataavailable = e => {
-            audioChunksRef.current.push(e.data);
-        };
+    // Function to start recording
+    const startRecording = () => {
+        navigator.mediaDevices.getUserMedia({
+            audio: {
+                sampleRate: 44100,
+                channelCount: 1,
+                volume: 1.0,
+                echoCancellation: true
+            }
+        })
+            .then(stream => {
+                audioChunksRef.current = [];
+                const mimeType = getSupportedMimeType();
+                let recorder = new MediaRecorder(stream, { mimeType });
 
-        recorder.start();
-        setMediaRecorder(recorder);
-        setIsRecording(true);
-    })
-    .catch(error => {
-        console.error('Error accessing microphone:', error);
-        // Handle error - show message to user
-    });
-};
+                recorder.ondataavailable = e => {
+                    audioChunksRef.current.push(e.data);
+                };
 
-// Function to stop recording
-const stopRecording = () => {
-    if (mediaRecorder) {
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                recorder.start();
+                setMediaRecorder(recorder);
+                setIsRecording(true);
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                // Handle error - show message to user
+            });
+    };
 
-        mediaRecorder.onstop = () => {
-            const mimeType = mediaRecorder.mimeType;
-            const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-            sendAudioToServer(audioBlob);
-            setIsRecording(false);
-            setMediaRecorder(null);
-        };
+    // Function to stop recording
+    const stopRecording = () => {
+        if (mediaRecorder) {
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
 
-        mediaRecorder.stop();
-    }
-};
+            mediaRecorder.onstop = () => {
+                const mimeType = mediaRecorder.mimeType;
+                const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+                sendAudioToServer(audioBlob);
+                setIsRecording(false);
+                setMediaRecorder(null);
+            };
 
-// Function to send audio to server
-const sendAudioToServer = (audioBlob) => {
-    if (audioBlob.size === 0) {
-        console.error('Audio Blob is empty');
-        // Handle error - show message to user
-        return;
-    }
+            mediaRecorder.stop();
+        }
+    };
 
-    const formData = new FormData();
-    formData.append('audio', audioBlob);
-    setIsLoading(true);
+    // Function to send audio to server
+    const sendAudioToServer = (audioBlob) => {
+        if (audioBlob.size === 0) {
+            console.error('Audio Blob is empty');
+            // Handle error - show message to user
+            return;
+        }
 
-      apiServerAxios.post('/api/ai/mental_health/voice-to-text', formData, {
-          headers: {
-              'Content-Type': 'multipart/form-data'
-          }
-      })
-    .then(response => {
-        const { message } = response.data;
-        setInput(message);
-        sendMessage();
-    })
-    .catch(error => {
-        console.error('Error uploading audio:', error);
-        // Handle error - show message to user
-    })
-    .finally(() => {
-        setIsLoading(false);
-    });
-};// Remove audioChunks from dependencies to prevent re-creation
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+        setIsLoading(true);
+
+        apiServerAxios.post('/api/ai/mental_health/voice-to-text', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+            .then(response => {
+                const { message } = response.data;
+                setInput(message);
+                sendMessage();
+            })
+            .catch(error => {
+                console.error('Error uploading audio:', error);
+                // Handle error - show message to user
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    };// Remove audioChunks from dependencies to prevent re-creation
 
 
     // Handle input changes
@@ -338,59 +338,59 @@ const sendAudioToServer = (audioBlob) => {
             <Box sx={{ maxWidth: '100%', mx: 'auto', my: 2, display: 'flex', flexDirection: 'column', height: '91vh', borderRadius: 2, boxShadow: 1 }}>
                 <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 2, boxShadow: 3 }}>
                     <CardContent sx={{ flexGrow: 1, overflow: 'auto', padding: 3, position: 'relative' }}>
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center', // This ensures all items in the box are aligned to the center vertically
-                        justifyContent: 'space-between', // This spreads out the items to use the available space
-                        position: 'relative', // Relative positioning for positioning children absolutely within the box if needed
-                        marginBottom:'5px',
-                    }}>
-                    <Tooltip title="Toggle voice responses">
-                        <IconButton color="inherit" onClick={handleToggleVoice} sx={{ padding: 0 }}>
-                            <Switch
-                            checked={voiceEnabled}
-                            onChange={(e) => setVoiceEnabled(e.target.checked)}
-                            icon={<VolumeOffIcon />}
-                            checkedIcon={<VolumeUpIcon />}
-                            inputProps={{ 'aria-label': 'Voice response toggle' }}
-                            color="default"
-                            sx={{
-                                height: 42, // Adjust height to align with icons
-                                '& .MuiSwitch-switchBase': {
-                                padding: '9px', // Reduce padding to make the switch smaller
-                                },
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                                color: 'white',
-                                transform: 'translateX(16px)',
-                                '& + .MuiSwitch-track': {
-                                    
-                                    backgroundColor: 'primary.main',
-                                },
-                                },
-                            }}
-                            />
-                        </IconButton>
-                        </Tooltip>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center', // This ensures all items in the box are aligned to the center vertically
+                            justifyContent: 'space-between', // This spreads out the items to use the available space
+                            position: 'relative', // Relative positioning for positioning children absolutely within the box if needed
+                            marginBottom: '5px',
+                        }}>
+                            <Tooltip title="Toggle voice responses">
+                                <IconButton color="inherit" onClick={handleToggleVoice} sx={{ padding: 0 }}>
+                                    <Switch
+                                        checked={voiceEnabled}
+                                        onChange={(e) => setVoiceEnabled(e.target.checked)}
+                                        icon={<VolumeOffIcon />}
+                                        checkedIcon={<VolumeUpIcon />}
+                                        inputProps={{ 'aria-label': 'Voice response toggle' }}
+                                        color="default"
+                                        sx={{
+                                            height: 42, // Adjust height to align with icons
+                                            '& .MuiSwitch-switchBase': {
+                                                padding: '9px', // Reduce padding to make the switch smaller
+                                            },
+                                            '& .MuiSwitch-switchBase.Mui-checked': {
+                                                color: 'white',
+                                                transform: 'translateX(16px)',
+                                                '& + .MuiSwitch-track': {
 
-                        <Tooltip title="Start a new chat" placement="top" arrow>
-                            <IconButton
-                                aria-label="new chat"
-                                //variant="outlined"
-                                color="primary"
-                                onClick={finalizeChat}
-                                disabled={isLoading}
-                                sx={{
-                                    '&:hover': {
-                                        backgroundColor: 'primary.main',
-                                        color: 'common.white',
-                                    }
-                                }}
-                            >
-                                <LibraryAddIcon />
-                            </IconButton>
-                        </Tooltip>
+                                                    backgroundColor: 'primary.main',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Start a new chat" placement="top" arrow>
+                                <IconButton
+                                    aria-label="new chat"
+                                    //variant="outlined"
+                                    color="primary"
+                                    onClick={finalizeChat}
+                                    disabled={isLoading}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'primary.main',
+                                            color: 'common.white',
+                                        }
+                                    }}
+                                >
+                                    <LibraryAddIcon />
+                                </IconButton>
+                            </Tooltip>
                         </Box>
-                        <Divider sx={{marginBottom:'10px'}} />
+                        <Divider sx={{ marginBottom: '10px' }} />
                         {welcomeMessage.length === 0 && (
                             <Box sx={{ display: 'flex', marginBottom: 2, marginTop: 3 }}>
                                 <Avatar src={Aria} sx={{ width: 44, height: 44, marginRight: 2, }} alt="Aria" />
