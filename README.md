@@ -14,8 +14,10 @@
 You may access the latest production site through https://mental-health-app-web.azurewebsites.net and the latest development mirror through https://green-sand-04b157b0f.5.azurestaticapps.net/. 
 ## Export the Application
 1. Clone the repo
-`https://github.com/janthonysantana/Mental-Health-Companion.git`
-2. Build the server with Docker
+```
+https://github.com/janthonysantana/Mental-Health-Companion.git
+```
+3. Build the server with Docker
 ```
 cd ./server
 docker build --pull --rm -t mental-health-app:latest .
@@ -26,8 +28,10 @@ cd ./client
 npm install
 ```
 4. Run the backend:
-```docker run -d -p 4242:80 mental-health-app:latest```
-5. Build the frontend:
+```
+docker run -d -p 4242:80 mental-health-app:latest
+```
+6. Build the frontend:
 ```
 npm run build
 ```
